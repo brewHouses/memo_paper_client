@@ -4,7 +4,7 @@ const textToSVG = TextToSVG.loadSync();
 const attributes = {fill: 'red', stroke: 'black'};
 const options = {x: 0, y: 0, fontSize: 72, anchor: 'top', attributes: attributes};
  
-const svg = textToSVG.getSVG('SUSE', options);
+const svg = textToSVG.getSVG('y4e213', options);
  
 
 var fs = require('fs');

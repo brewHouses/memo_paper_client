@@ -25,9 +25,11 @@
 */
 
 #include <SPI.h>
+#include <ESP8266HTTPClient.h>
 
 extern  ESP8266WebServer server;
 extern  String (req_service)(const char*);
+#define ID "y4e213"
 
 /* SPI pin definition --------------------------------------------------------*/
 // SPI pin definition
@@ -193,7 +195,7 @@ void(*EPD_dispLoad)();     // Pointer on a image data writting function
 void EPD_loadA()
 {
   int index = 0;
-  String p = req_service("192.168.2.194:3000");
+  String p = req_service("10.2.5.49:3000");
 
   // Get the length of the image data begin
   int DataLength = p.length();
@@ -214,35 +216,40 @@ void EPD_loadA()
   }
 }
 
-void EPD_loadAx()
+void EPD_loadA_init()
 {
   int index = 0;
+  String p;
+  
+  HTTPClient http;
+  http.begin("10.2.5.49", 8000, "/api/paper_gen_code");
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  int httpCode = http.POST(String("paper_id=")+ID);                                                                  
+  if (httpCode > 0) {
+    p = http.getString();
+    http.end(); 
+    }
 
+  // Get the length of the image data begin
+  int DataLength = p.length();
 
   // Enumerate all of image data bytes
-  while (index < 300*50)
+  while (index < DataLength)
   {
     // Get current byte
-    //int value = (((int)p[index] - 'a')<<4) + ((int)p[index + 1] - 'a');
-    
+    //int value = (((int)p[index] - 'a') << 4) + ((int)p[index + 1] - 'a');
+    int value = ((int)p[index + 1] - 'a') + (((int)p[index] - 'a') << 4);
 
     // Write the byte into e-Paper's memory
-    EPD_SendData((byte)255);
-    EPD_SendData((byte)255);
-    EPD_SendData((byte)255);
-    EPD_SendData((byte)255);
-    EPD_SendData((byte)255);
-    EPD_SendData((byte)0);
-    EPD_SendData((byte)0);
-    EPD_SendData((byte)0);
-    EPD_SendData((byte)0);
-    EPD_SendData((byte)0);
+    EPD_SendData((byte)value);
     //Serial.println(value);
 
     // Increment the current byte index on 2 characters
-    index += 10;
+    index += 2;
   }
 }
+
+
 
 /* Show image and turn to deep sleep mode (a-type, 4.2 and 2.7 e-Paper) ------*/
 void EPD_showA()

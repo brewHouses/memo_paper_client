@@ -3,16 +3,48 @@
 #include <ESP8266HTTPClient.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
-#include "scripts.h"    // JavaScript code
-#include "css.h"        // Cascading Style Sheets
-#include "html.h"       // HTML page of the tool
 #include "epd.h"        // e-Paper driver
 
 const char* ssid = "abc";
 const char* password = "12345678";
+#define ID "y4e213"
+#define PARA(a,b,c) a##b##c
+#define IP "10.2.5.49"
+#define PORT 8000
+
+//const char[] init_page = [];
 
 ESP8266WebServer server(80);
 IPAddress myIP;       // IP address in your local wifi net
+
+void server_connection_test(const char* api){
+  HTTPClient http;
+  http.begin(IP, PORT, api);
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  int httpCode = http.POST(String("user_id=")+ID);                                                                 
+  if (httpCode > 0) {
+    String payload = http.getString();
+    http.end(); 
+    if(payload == "UPDATE"){
+        Serial.println("OK");
+    }
+        Serial.println(payload);
+    }
+}
+
+void get_init_code(const char* api){
+  HTTPClient http;
+  http.begin(IP, PORT, api);
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  int httpCode = http.POST(String("paper_id=")+ID);                                                                 
+  if (httpCode > 0) {
+    String payload = http.getString();
+    http.end(); 
+    paper_show();
+  }
+}
+
+
 
 void setup(void) {
 
@@ -45,17 +77,14 @@ void setup(void) {
     Serial.println("MDNS responder started");
   }
   
-  EPD_Init();
-  EPD_loadA();
-  EPD_loadA();
-  EPD_showB();
-  //req_service("192.168.2.194:3000");
+  //server_connection_test("/api/paper_hb_handler");
+  paper_show_init();
 }
 
 String req_service(const char* url){
   HTTPClient http;
 
-  http.begin("192.168.2.194", 3000, "/");
+  http.begin("10.2.5.49", 3000, "/");
   int httpCode = http.GET();                                                                 
   if (httpCode > 0) {
     String payload = http.getString();
@@ -65,11 +94,24 @@ String req_service(const char* url){
     http.end(); 
     String x;
     return x;
-  
 }
 
 void heart_beat(){
     req_service("some url");
+}
+
+void paper_show(){
+    EPD_Init();
+    EPD_loadA();
+    EPD_loadA();
+    EPD_showB();
+}
+
+void paper_show_init(){
+    EPD_Init();
+    EPD_loadA_init();
+    EPD_loadA_init();
+    EPD_showB();
 }
 
 void loop(void) {
