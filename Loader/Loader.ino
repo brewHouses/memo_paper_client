@@ -1,5 +1,6 @@
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
+#include <ESP8266HTTPClient.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
 #include "scripts.h"    // JavaScript code
@@ -7,8 +8,8 @@
 #include "html.h"       // HTML page of the tool
 #include "epd.h"        // e-Paper driver
 
-const char* ssid = "Waveshare-TL-WR886N";
-const char* password = "waveshare0755";
+const char* ssid = "abc";
+const char* password = "12345678";
 
 ESP8266WebServer server(80);
 IPAddress myIP;       // IP address in your local wifi net
@@ -43,21 +44,32 @@ void setup(void) {
   if (MDNS.begin("esp8266")) {
     Serial.println("MDNS responder started");
   }
+  
+  EPD_Init();
+  EPD_loadA();
+  EPD_loadA();
+  EPD_showB();
+  //req_service("192.168.2.194:3000");
+}
 
-  server.on("/", handleRoot);
-  server.on("/styles.css", sendCSS);
-  server.on("/processingA.js", sendJS_A);
-  server.on("/processingB.js", sendJS_B);
-  server.on("/processingC.js", sendJS_C);
-  server.on("/processingD.js", sendJS_D);
-  server.on("/LOAD", EPD_Load);
-  server.on("/EPD", EPD_Init);
-  server.on("/NEXT", EPD_Next);
-  server.on("/SHOW", EPD_Show);
-  server.onNotFound(handleNotFound);
+String req_service(const char* url){
+  HTTPClient http;
 
-  server.begin();
-  Serial.println("HTTP server started");
+  http.begin("192.168.2.194", 3000, "/");
+  int httpCode = http.GET();                                                                 
+  if (httpCode > 0) {
+    String payload = http.getString();
+    http.end(); 
+    return payload;
+    }
+    http.end(); 
+    String x;
+    return x;
+  
+}
+
+void heart_beat(){
+    req_service("some url");
 }
 
 void loop(void) {
@@ -66,13 +78,9 @@ void loop(void) {
 
 void EPD_Init()
 {
-  EPD_dispIndex = ((int)server.arg(0)[0] - 'a') +  (((int)server.arg(0)[1] - 'a') << 4);
-  // Print log message: initialization of e-Paper (e-Paper's type)
-  Serial.printf("EPD %s\r\n", EPD_dispMass[EPD_dispIndex].title);
 
-  // Initialization
   EPD_dispInit();
-  server.send(200, "text/plain", "Init ok\r\n");
+
 }
 
 void EPD_Load()
@@ -119,21 +127,4 @@ void EPD_Show()
   // Show results and Sleep
   EPD_dispMass[EPD_dispIndex].show();
   server.send(200, "text/plain", "Show ok\r\n");
-}
-
-void handleNotFound() {
-  String message = "File Not Found\n\n";
-  message += "URI: ";
-  message += server.uri();
-  message += "\nMethod: ";
-  message += (server.method() == HTTP_GET) ? "GET" : "POST";
-  message += "\nArguments: ";
-  message += server.args();
-  message += "\n";
-  for (uint8_t i = 0; i < server.args(); i++) {
-    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
-  }
-  server.send(200, "text/plain", message);
-  Serial.print("Unknown URI: ");
-  Serial.println(server.uri());
 }
