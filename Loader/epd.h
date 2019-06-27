@@ -216,7 +216,7 @@ void EPD_loadA()
   }
 }
 
-void EPD_loadA_init()
+int EPD_loadA_init(String count)
 {
   int index = 0;
   String p;
@@ -224,7 +224,7 @@ void EPD_loadA_init()
   HTTPClient http;
   http.begin("10.2.5.49", 8000, "/api/paper_gen_code");
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-  int httpCode = http.POST(String("paper_id=")+ID);                                                                  
+  int httpCode = http.POST(String("paper_id=")+ID+String("&count=")+count);                                                                  
   if (httpCode > 0) {
     p = http.getString();
     http.end(); 
@@ -232,6 +232,9 @@ void EPD_loadA_init()
 
   // Get the length of the image data begin
   int DataLength = p.length();
+  if(DataLength == 1 && p[0] == 'Y')
+    //  if registed in server, return True
+    return 1;
 
   // Enumerate all of image data bytes
   while (index < DataLength)
@@ -247,6 +250,7 @@ void EPD_loadA_init()
     // Increment the current byte index on 2 characters
     index += 2;
   }
+  return 0;
 }
 
 

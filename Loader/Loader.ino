@@ -12,6 +12,8 @@ const char* password = "12345678";
 #define IP "10.2.5.49"
 #define PORT 8000
 
+int registed_flag = 0;
+
 //const char[] init_page = [];
 
 ESP8266WebServer server(80);
@@ -108,9 +110,14 @@ void paper_show(){
 }
 
 void paper_show_init(){
+    int flag = EPD_loadA_init("0");
+    if(flag){
+      registed_flag = 1;
+      return;
+    }
     EPD_Init();
-    EPD_loadA_init();
-    EPD_loadA_init();
+    EPD_loadA_init("1");
+    EPD_loadA_init("2");
     EPD_showB();
 }
 
