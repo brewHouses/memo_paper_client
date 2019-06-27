@@ -26,10 +26,10 @@
 
 #include <SPI.h>
 #include <ESP8266HTTPClient.h>
+#include "config.h"
 
-extern  ESP8266WebServer server;
-extern  String (req_service)(const char*);
-#define ID "y4e213"
+extern String (req_service)(const char*);
+extern String update_time;
 
 /* SPI pin definition --------------------------------------------------------*/
 // SPI pin definition
@@ -222,7 +222,7 @@ int EPD_loadA_init(String count)
   String p;
   
   HTTPClient http;
-  http.begin("10.2.5.49", 8000, "/api/paper_gen_code");
+  http.begin(IP, PORT, "/api/paper_gen_code");
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
   int httpCode = http.POST(String("paper_id=")+ID+String("&count=")+count);                                                                  
   if (httpCode > 0) {
@@ -253,7 +253,38 @@ int EPD_loadA_init(String count)
   return 0;
 }
 
+void EPD_loadA_memo(String count)
+{
+  int index = 0;
+  String p;
+  
+  HTTPClient http;
+  http.begin(IP, PORT, "/api/paper_hb_querry");
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  int httpCode = http.POST(String("paper_id=")+ID+String("&count=")+count+String("&update_time=")+update_time);                                                                  
+  if (httpCode > 0) {
+    p = http.getString();
+    http.end(); 
+  }
 
+  // Get the length of the image data begin
+  int DataLength = p.length();
+
+  // Enumerate all of image data bytes
+  while (index < DataLength)
+  {
+    // Get current byte
+    //int value = (((int)p[index] - 'a') << 4) + ((int)p[index + 1] - 'a');
+    int value = ((int)p[index + 1] - 'a') + (((int)p[index] - 'a') << 4);
+
+    // Write the byte into e-Paper's memory
+    EPD_SendData((byte)value);
+    //Serial.println(value);
+
+    // Increment the current byte index on 2 characters
+    index += 2;
+  }
+}
 
 /* Show image and turn to deep sleep mode (a-type, 4.2 and 2.7 e-Paper) ------*/
 void EPD_showA()
