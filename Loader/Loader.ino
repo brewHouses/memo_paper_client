@@ -13,6 +13,7 @@ const char* password = "12345678";
 #define PORT 8000
 
 int registed_flag = 0;
+String update_time;
 
 //const char[] init_page = [];
 
@@ -98,8 +99,22 @@ String req_service(const char* url){
     return x;
 }
 
-void heart_beat(){
-    req_service("some url");
+// if the server have some update, then return True
+// else return False
+char heart_beat(){
+  HTTPClient http;
+
+  http.begin(IP, PORT, "/paper_hb_handler");
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  // send itslef's id and last update_time
+  int httpCode = http.POST(String("paper_id=")+ID+String("&update_time=")+update_time);                                                                
+  if (httpCode > 0) {
+    String payload = http.getString();
+    http.end(); 
+    if (payload[0] == 'Y')
+      return 1;
+    return 0;        
+  }
 }
 
 void paper_show(){
