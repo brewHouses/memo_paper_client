@@ -69,7 +69,8 @@ char heart_beat(){
     Serial.println(payload);
     http.end();
     if(update_time == "_"  && payload.length() > 1){
-      update_time = payload;
+      update_time = "0";
+      //return 1;
     }
     if (payload[0] == 'Y')
       return 1;
