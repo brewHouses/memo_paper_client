@@ -40,21 +40,6 @@ void get_init_code(const char* api){
   }
 }
 
-String req_service(const char* url){
-  HTTPClient http;
-
-  http.begin("10.2.5.49", 3000, "/");
-  int httpCode = http.GET();                                                                 
-  if (httpCode > 0) {
-    String payload = http.getString();
-    http.end(); 
-    return payload;
-    }
-    http.end(); 
-    String x;
-    return x;
-}
-
 // if the server have some update, then return True
 // else return False
 char heart_beat(){
